@@ -95,8 +95,8 @@ public class MeteorGuiTheme extends GuiTheme {
 
     // Colors
 
-    public final Setting<SettingColor> accentColor = color("accent", "Main color of the GUI.", new SettingColor(145, 61, 226));
-    public final Setting<SettingColor> checkboxColor = color("checkbox", "Color of checkbox.", new SettingColor(145, 61, 226));
+    public final Setting<SettingColor> accentColor = color("accent", "Main color of the GUI.", new SettingColor(255, 255, 255));
+    public final Setting<SettingColor> checkboxColor = color("checkbox", "Color of checkbox.", new SettingColor(255, 255, 255));
     public final Setting<SettingColor> plusColor = color("plus", "Color of plus button.", new SettingColor(50, 255, 50));
     public final Setting<SettingColor> minusColor = color("minus", "Color of minus button.", new SettingColor(255, 50, 50));
     public final Setting<SettingColor> favoriteColor = color("favorite", "Color of checked favorite button.", new SettingColor(250, 215, 0));
@@ -106,7 +106,7 @@ public class MeteorGuiTheme extends GuiTheme {
     public final Setting<SettingColor> textColor = color(sgTextColors, "text", "Color of text.", new SettingColor(255, 255, 255));
     public final Setting<SettingColor> textSecondaryColor = color(sgTextColors, "text-secondary-text", "Color of secondary text.", new SettingColor(150, 150, 150));
     public final Setting<SettingColor> textHighlightColor = color(sgTextColors, "text-highlight", "Color of text highlighting.", new SettingColor(45, 125, 245, 100));
-    public final Setting<SettingColor> titleTextColor = color(sgTextColors, "title-text", "Color of title text.", new SettingColor(255, 255, 255));
+    public final Setting<SettingColor> titleTextColor = color(sgTextColors, "title-text", "Color of title text.", new SettingColor(0, 0, 0));
     public final Setting<SettingColor> loggedInColor = color(sgTextColors, "logged-in-text", "Color of logged in account name.", new SettingColor(45, 225, 45));
     public final Setting<SettingColor> placeholderColor = color(sgTextColors, "placeholder", "Color of placeholder text.", new SettingColor(255, 255, 255, 20));
 
@@ -153,12 +153,12 @@ public class MeteorGuiTheme extends GuiTheme {
     public final ThreeStateColorSetting sliderHandle = new ThreeStateColorSetting(
         sgSlider,
         "slider-handle",
-        new SettingColor(130, 0, 255),
-        new SettingColor(140, 30, 255),
-        new SettingColor(150, 60, 255)
+        new SettingColor(255, 255, 255),
+        new SettingColor(225, 225, 225),
+        new SettingColor(200, 200, 200)
     );
 
-    public final Setting<SettingColor> sliderLeft = color(sgSlider, "slider-left", "Color of slider left part.", new SettingColor(100, 35, 170));
+    public final Setting<SettingColor> sliderLeft = color(sgSlider, "slider-left", "Color of slider left part.", new SettingColor(255, 255, 255));
     public final Setting<SettingColor> sliderRight = color(sgSlider, "slider-right", "Color of slider right part.", new SettingColor(50, 50, 50));
 
     // Starscript
@@ -172,7 +172,7 @@ public class MeteorGuiTheme extends GuiTheme {
     private final Setting<SettingColor> starscriptStrings = color(sgStarscript, "starscript-strings", "Color of strings in Starscript code.", new SettingColor(106, 135, 89));
     private final Setting<SettingColor> starscriptNumbers = color(sgStarscript, "starscript-numbers", "Color of numbers in Starscript code.", new SettingColor(104, 141, 187));
     private final Setting<SettingColor> starscriptKeywords = color(sgStarscript, "starscript-keywords", "Color of keywords in Starscript code.", new SettingColor(204, 120, 50));
-    private final Setting<SettingColor> starscriptAccessedObjects = color(sgStarscript, "starscript-accessed-objects", "Color of accessed objects (before a dot) in Starscript code.", new SettingColor(152, 118, 170));
+    private final Setting<SettingColor> starscriptAccessedObjects = color(sgStarscript, "starscript-accessed-objects", "Color of accessed objects (before a dot) in Starscript code.", new SettingColor(255, 255, 255));
 
     public MeteorGuiTheme() {
         super("Meteor");

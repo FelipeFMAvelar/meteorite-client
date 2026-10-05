@@ -38,7 +38,7 @@
   "accessWidener": "meteorite-client.classtweaker",
   "custom": {
     "meteorite-client:build_number": "${build_number}",
-    "meteorite-client:color": "145,61,226",
+    "meteorite-client:color": "255,255,255",
     "meteorite-client:commit": "${commit}",
     "modmenu": {
       "links": {
