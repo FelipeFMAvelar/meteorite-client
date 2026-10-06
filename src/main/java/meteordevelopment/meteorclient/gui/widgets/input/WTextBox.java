@@ -5,7 +5,6 @@
 
 package meteordevelopment.meteorclient.gui.widgets.input;
 
-import com.mojang.blaze3d.platform.MacosUtil;
 import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
 import meteordevelopment.meteorclient.gui.GuiKeyEvents;
@@ -19,7 +18,6 @@ import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.util.Mth;
-import org.apache.commons.lang3.SystemUtils;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
@@ -240,32 +238,34 @@ public abstract class WTextBox extends WWidget {
     public boolean onKeyPressed(KeyEvent input) {
         if (!focused) return false;
 
-        boolean control = MacosUtil.IS_MACOS ? input.modifiers() == MOD_SUPER : input.modifiers() == MOD_CONTROL;
-
-        if (control && input.key() == KEY_C) {
+        if (isCopyShortcut(input)) {
             if (cursor != selectionStart || cursor != selectionEnd) {
                 mc.keyboardHandler.setClipboard(text.substring(selectionStart, selectionEnd));
             }
             return true;
-        } else if (control && input.key() == KEY_X) {
+        } else if (isCutShortcut(input)) {
             if (cursor != selectionStart || cursor != selectionEnd) {
                 mc.keyboardHandler.setClipboard(text.substring(selectionStart, selectionEnd));
                 clearSelection();
             }
 
             return true;
-        } else if (control && input.key() == KEY_A) {
+        } else if (isSelectAllShortcut(input)) {
             cursor = text.length();
             selectionStart = 0;
             selectionEnd = cursor;
-        } else if (input.modifiers() == ((MacosUtil.IS_MACOS ? MOD_SUPER : MOD_CONTROL) | MOD_SHIFT) && input.key() == KEY_A) {
+            cursorChanged();
+            return true;
+        } else if (isDeselectShortcut(input)) {
             resetSelection();
-        } else if (input.key() == KEY_RETURN || input.key() == KEY_NUMPADENTER) {
+            cursorChanged();
+            return true;
+        } else if (input.isConfirmation() || input.key() == KEY_RETURN || input.key() == KEY_NUMPADENTER) {
             setFocused(false);
 
             if (actionOnUnfocused != null) actionOnUnfocused.run();
             return true;
-        } else if (input.key() == KEY_TAB && completionsW != null) {
+        } else if ((input.isCycleFocus() || input.key() == KEY_TAB) && completionsW != null) {
             String completion = ((ICompletionItem) completionsW.cells.get(getSelectedCompletion()).widget()).getCompletion();
 
             StringBuilder sb = new StringBuilder(text.length() + completion.length() + 1);
@@ -295,16 +295,76 @@ public abstract class WTextBox extends WWidget {
         return onKeyRepeated(input);
     }
 
+    private static boolean isCopyShortcut(KeyEvent input) {
+        if (input.isCopy()) return true;
+        return input.key() == KEY_C && input.hasControlDownWithQuirk() && !input.hasShiftDown() && !input.hasAltDown();
+    }
+
+    private static boolean isCutShortcut(KeyEvent input) {
+        if (input.isCut()) return true;
+        return input.key() == KEY_X && input.hasControlDownWithQuirk() && !input.hasShiftDown() && !input.hasAltDown();
+    }
+
+    private static boolean isPasteShortcut(KeyEvent input) {
+        if (input.isPaste()) return true;
+        return input.key() == KEY_V && input.hasControlDownWithQuirk() && !input.hasShiftDown() && !input.hasAltDown();
+    }
+
+    private static boolean isSelectAllShortcut(KeyEvent input) {
+        if (input.isSelectAll()) return true;
+        return input.key() == KEY_A && input.hasControlDownWithQuirk() && !input.hasShiftDown() && !input.hasAltDown();
+    }
+
+    private static boolean isDeselectShortcut(KeyEvent input) {
+        return input.key() == KEY_A && input.hasControlDownWithQuirk() && input.hasShiftDown() && !input.hasAltDown();
+    }
+
+    private static boolean isBackspace(KeyEvent input) {
+        return input.key() == KEY_BACKSPACE || input.shortcutKey() == 8;
+    }
+
+    private static boolean isDelete(KeyEvent input) {
+        return input.key() == KEY_DELETE || input.shortcutKey() == 127;
+    }
+
+    private static boolean isLeft(KeyEvent input) {
+        return input.isLeft() || input.key() == KEY_LEFT || input.shortcutKey() == 1073741904;
+    }
+
+    private static boolean isRight(KeyEvent input) {
+        return input.isRight() || input.key() == KEY_RIGHT || input.shortcutKey() == 1073741903;
+    }
+
+    private static boolean isUp(KeyEvent input) {
+        return input.isUp() || input.key() == KEY_UP;
+    }
+
+    private static boolean isDown(KeyEvent input) {
+        return input.isDown() || input.key() == KEY_DOWN;
+    }
+
+    private static boolean isHome(KeyEvent input) {
+        return input.key() == KEY_HOME || input.shortcutKey() == 1073741898;
+    }
+
+    private static boolean isEnd(KeyEvent input) {
+        return input.key() == KEY_END || input.shortcutKey() == 1073741901;
+    }
+
     @Override
     public boolean onKeyRepeated(KeyEvent input) {
         if (!focused) return false;
 
-        boolean control = MacosUtil.IS_MACOS ? input.modifiers() == MOD_SUPER : input.modifiers() == MOD_CONTROL;
-        boolean shift = input.modifiers() == MOD_SHIFT;
-        boolean controlShift = input.modifiers() == ((SystemUtils.IS_OS_WINDOWS ? MOD_ALT : MacosUtil.IS_MACOS ? MOD_SUPER : MOD_CONTROL) | MOD_SHIFT);
-        boolean altShift = input.modifiers() == ((SystemUtils.IS_OS_WINDOWS ? MOD_CONTROL : MOD_ALT) | MOD_SHIFT);
+        boolean ctrl = input.hasControlDownWithQuirk();
+        boolean shift = input.hasShiftDown();
+        boolean alt = input.hasAltDown();
+        boolean noMods = !ctrl && !shift && !alt;
+        // Support both Ctrl (Windows/Linux) and Alt/Option (macOS/Linux) for word jumps,
+        // matching vanilla EditBox (Ctrl) plus Meteor's historic Alt word-jump behaviour.
+        boolean wordJump = ctrl || alt;
+        boolean wordSelect = wordJump && shift;
 
-        if (control && input.key() == KEY_V) {
+        if (isPasteShortcut(input)) {
             clearSelection();
 
             String preText = text;
@@ -328,13 +388,11 @@ public abstract class WTextBox extends WWidget {
 
             if (!text.equals(preText)) runAction();
             return true;
-        } else if (input.key() == KEY_BACKSPACE) {
+        } else if (isBackspace(input)) {
             if (cursor > 0 && cursor == selectionStart && cursor == selectionEnd) {
                 String preText = text;
 
-                int count = (input.modifiers() == (SystemUtils.IS_OS_WINDOWS ? MOD_ALT : MacosUtil.IS_MACOS ? MOD_SUPER : MOD_CONTROL))
-                    ? cursor
-                    : (input.modifiers() == (SystemUtils.IS_OS_WINDOWS ? MOD_CONTROL : MOD_ALT))
+                int count = wordJump
                       ? countToNextSpace(true)
                       : 1;
 
@@ -348,14 +406,12 @@ public abstract class WTextBox extends WWidget {
             }
 
             return true;
-        } else if (input.key() == KEY_DELETE) {
+        } else if (isDelete(input)) {
             if (cursor == selectionStart && cursor == selectionEnd) {
                 if (cursor < text.length()) {
                     String preText = text;
 
-                    int count = input.modifiers() == (SystemUtils.IS_OS_WINDOWS ? MOD_ALT : MacosUtil.IS_MACOS ? MOD_SUPER : MOD_CONTROL)
-                        ? text.length() - cursor
-                        : (input.modifiers() == (SystemUtils.IS_OS_WINDOWS ? MOD_CONTROL : MOD_ALT))
+                    int count = wordJump
                           ? countToNextSpace(false)
                           : 1;
 
@@ -367,20 +423,15 @@ public abstract class WTextBox extends WWidget {
                 clearSelection();
             }
             return true;
-        } else if (input.key() == KEY_LEFT) {
+        } else if (isLeft(input)) {
             if (cursor > 0) {
-                // sets the cursor to just after the next leftmost space
-                if (input.modifiers() == (SystemUtils.IS_OS_WINDOWS ? MOD_CONTROL : MOD_ALT)) {
+                // Word jump without selection
+                if (wordJump && !shift) {
                     cursor -= countToNextSpace(true);
                     resetSelection();
                 }
-                // sets the cursor to the beginning of the text box
-                else if (input.modifiers() == (SystemUtils.IS_OS_WINDOWS ? MOD_ALT : MacosUtil.IS_MACOS ? MOD_SUPER : MOD_CONTROL)) {
-                    cursor = 0;
-                    resetSelection();
-                }
-                // sets the selection to just after the next leftmost space
-                else if (altShift) {
+                // Word selection (Ctrl+Shift+Left or Alt+Shift+Left)
+                else if (wordSelect) {
                     if (cursor == selectionEnd && cursor != selectionStart) {
                         cursor -= countToNextSpace(true);
                         if (cursor >= selectionStart) selectionEnd = cursor;
@@ -393,17 +444,8 @@ public abstract class WTextBox extends WWidget {
                         selectionStart = cursor;
                     }
                 }
-                // sets the selection to the beginning of the text box
-                else if (controlShift) {
-                    if (cursor == selectionEnd && cursor != selectionStart) {
-                        selectionEnd = selectionStart;
-                    }
-                    selectionStart = 0;
-
-                    cursor = 0;
-                }
-                // moves the selection one character to the left
-                else if (shift) {
+                // Character selection (Shift+Left)
+                else if (shift && !ctrl && !alt) {
                     if (cursor == selectionEnd && cursor != selectionStart) {
                         selectionEnd = cursor - 1;
                     } else {
@@ -412,7 +454,7 @@ public abstract class WTextBox extends WWidget {
 
                     cursor--;
                 }
-                // moves the cursor one character to the left
+                // Plain move, collapsing any selection
                 else {
                     if (cursor == selectionEnd && cursor != selectionStart) {
                         cursor = selectionStart;
@@ -424,27 +466,22 @@ public abstract class WTextBox extends WWidget {
                 }
 
                 cursorChanged();
-            } else if (selectionStart != selectionEnd && selectionStart == 0 && input.modifiers() == 0) {
+            } else if (selectionStart != selectionEnd && selectionStart == 0 && noMods) {
                 cursor = 0;
                 resetSelection();
                 cursorChanged();
             }
 
             return true;
-        } else if (input.key() == KEY_RIGHT) {
+        } else if (isRight(input)) {
             if (cursor < text.length()) {
-                // sets the cursor to just before the next rightmost space
-                if (input.modifiers() == (SystemUtils.IS_OS_WINDOWS ? MOD_CONTROL : MOD_ALT)) {
+                // Word jump without selection
+                if (wordJump && !shift) {
                     cursor += countToNextSpace(false);
                     resetSelection();
                 }
-                // sets the cursor to the end of the text box
-                else if (input.modifiers() == (SystemUtils.IS_OS_WINDOWS ? MOD_ALT : MacosUtil.IS_MACOS ? MOD_SUPER : MOD_CONTROL)) {
-                    cursor = text.length();
-                    resetSelection();
-                }
-                // sets the selection to just before the next rightmost space
-                else if (altShift) {
+                // Word selection (Ctrl+Shift+Right or Alt+Shift+Right)
+                else if (wordSelect) {
                     if (cursor == selectionStart && cursor != selectionEnd) {
                         cursor += countToNextSpace(false);
                         if (cursor <= selectionEnd) selectionStart = cursor;
@@ -457,16 +494,8 @@ public abstract class WTextBox extends WWidget {
                         selectionEnd = cursor;
                     }
                 }
-                // sets the selection to the end of the text box
-                else if (controlShift) {
-                    if (cursor == selectionStart && cursor != selectionEnd) {
-                        selectionStart = selectionEnd;
-                    }
-                    cursor = text.length();
-                    selectionEnd = cursor;
-                }
-                // moves the selection one character to the right
-                else if (shift) {
+                // Character selection (Shift+Right)
+                else if (shift && !ctrl && !alt) {
                     if (cursor == selectionStart && cursor != selectionEnd) {
                         selectionStart = cursor + 1;
                     } else {
@@ -475,7 +504,7 @@ public abstract class WTextBox extends WWidget {
 
                     cursor++;
                 }
-                // moves the cursor one character to the right
+                // Plain move, collapsing any selection
                 else {
                     if (cursor == selectionStart && cursor != selectionEnd) {
                         cursor = selectionEnd;
@@ -487,14 +516,42 @@ public abstract class WTextBox extends WWidget {
                 }
 
                 cursorChanged();
-            } else if (selectionStart != selectionEnd && selectionEnd == text.length() && input.modifiers() == 0) {
+            } else if (selectionStart != selectionEnd && selectionEnd == text.length() && noMods) {
                 cursor = text.length();
                 resetSelection();
                 cursorChanged();
             }
 
             return true;
-        } else if (input.key() == KEY_DOWN && completionsW != null) {
+        } else if (isHome(input)) {
+            if (shift) {
+                if (cursor == selectionEnd && cursor != selectionStart) {
+                    selectionEnd = selectionStart;
+                }
+                selectionStart = 0;
+                cursor = 0;
+            } else {
+                cursor = 0;
+                resetSelection();
+            }
+
+            cursorChanged();
+            return true;
+        } else if (isEnd(input)) {
+            if (shift) {
+                if (cursor == selectionStart && cursor != selectionEnd) {
+                    selectionStart = selectionEnd;
+                }
+                cursor = text.length();
+                selectionEnd = cursor;
+            } else {
+                cursor = text.length();
+                resetSelection();
+            }
+
+            cursorChanged();
+            return true;
+        } else if (isDown(input) && completionsW != null) {
             int currentI = getSelectedCompletion();
 
             if (currentI == Math.min(5, completions.size() - 1)) {
@@ -508,7 +565,7 @@ public abstract class WTextBox extends WWidget {
             }
 
             return true;
-        } else if (input.key() == KEY_UP && completionsW != null) {
+        } else if (isUp(input) && completionsW != null) {
             int currentI = getSelectedCompletion();
 
             if (currentI == 0) {

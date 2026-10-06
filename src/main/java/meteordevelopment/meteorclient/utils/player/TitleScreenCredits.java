@@ -20,7 +20,9 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.item.Items;
+import com.mojang.blaze3d.Blaze3D;
 
+import java.net.URI;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -29,6 +31,8 @@ import java.util.List;
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class TitleScreenCredits {
+    private static final String METEORITE_URL = "https://gitlab.com/felipefmavelar/meteorite-client";
+    private static final String N3KRO_URL = "https://gitlab.com/felipefmavelar";
     private static final List<Credit> credits = new ArrayList<>();
 
     private TitleScreenCredits() {
@@ -95,6 +99,21 @@ public class TitleScreenCredits {
             credit.text.append(Component.literal(addon.authors[i]).withStyle(ChatFormatting.WHITE));
         }
 
+        // Precompute click zones for the main credit ("<name> by <authors>"):
+        // <name> opens the repo, <authors> opens the author profile.
+        if (addon == MeteorClient.ADDON) {
+            String prefix = addon.name;
+            String middle = " by ";
+            StringBuilder authorsPart = new StringBuilder();
+            for (int i = 0; i < addon.authors.length; i++) {
+                if (i > 0) authorsPart.append(i == addon.authors.length - 1 ? " & " : ", ");
+                authorsPart.append(addon.authors[i]);
+            }
+            credit.prefixWidth = mc.font.width(prefix);
+            credit.authorStart = mc.font.width(prefix + middle);
+            credit.authorEnd = mc.font.width(prefix + middle + authorsPart);
+        }
+
         credits.add(credit);
     }
 
@@ -117,13 +136,33 @@ public class TitleScreenCredits {
         int y = 3;
         for (Credit credit : credits) {
             int width;
+            int prefixWidth;
+            int authorStart;
+            int authorEnd;
             synchronized (credit.text) {
                 width = mc.font.width(credit.text);
+                prefixWidth = credit.prefixWidth;
+                authorStart = credit.authorStart;
+                authorEnd = credit.authorEnd;
             }
 
             int x = mc.gui.screen().width - 3 - width;
 
             if (mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + mc.font.lineHeight + 2) {
+                // Main addon credit has dedicated GitLab links for each part of "Meteorite Client by n3kro_"
+                if (credit.addon == MeteorClient.ADDON) {
+                    double localX = mouseX - x;
+                    if (localX < prefixWidth) {
+                        Blaze3D.openUri(URI.create(METEORITE_URL));
+                        return true;
+                    }
+                    if (localX >= authorStart && localX <= authorEnd) {
+                        Blaze3D.openUri(URI.create(N3KRO_URL));
+                        return true;
+                    }
+                    return false;
+                }
+
                 if (credit.addon.getRepo() != null && credit.addon.getCommit() != null) {
                     mc.gui.setScreen(new CommitsScreen(GuiThemes.get(), credit.addon));
                     return true;
@@ -139,6 +178,10 @@ public class TitleScreenCredits {
     private static class Credit {
         public final MeteorAddon addon;
         public final MutableComponent text = Component.empty();
+        // Click zones for the main (Meteor) addon credit, measured from the start of the rendered line
+        public int prefixWidth;
+        public int authorStart;
+        public int authorEnd;
 
         public Credit(MeteorAddon addon) {
             this.addon = addon;

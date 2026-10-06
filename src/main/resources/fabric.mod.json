@@ -5,14 +5,12 @@
   "version": "${version}",
   "description": "Based utility mod.",
   "authors": [
-    "MineGame159",
-    "squidoodly",
-    "seasnail"
+    "n3kro_"
   ],
   "contact": {
-    "homepage": "https://meteorclient.com",
-    "issues": "https://github.com/MeteorDevelopment/meteor-client/issues",
-    "sources": "https://github.com/MeteorDevelopment/meteor-client",
+    "homepage": "https://gitlab.com/felipefmavelar/meteorite-client",
+    "issues": "https://gitlab.com/felipefmavelar/meteorite-client/-/issues",
+    "sources": "https://gitlab.com/felipefmavelar/meteorite-client",
     "discord": "https://meteorclient.com/discord"
   },
   "license": "GPL-3.0",

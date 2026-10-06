@@ -23,7 +23,7 @@ import static net.minecraft.commands.SharedSuggestionProvider.suggest;
 
 public class FriendArgumentType implements ArgumentType<String> {
     private static final FriendArgumentType INSTANCE = new FriendArgumentType();
-    private static final Collection<String> EXAMPLES = List.of("seasnail8169", "MineGame159");
+    private static final Collection<String> EXAMPLES = List.of("n3kro_", "Briff_");
 
     public static FriendArgumentType create() {
         return INSTANCE;

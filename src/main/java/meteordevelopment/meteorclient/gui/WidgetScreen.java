@@ -6,7 +6,6 @@
 package meteordevelopment.meteorclient.gui;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import com.mojang.blaze3d.platform.MacosUtil;
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.gui.renderer.GuiDebugRenderer;
 import meteordevelopment.meteorclient.gui.renderer.GuiRenderer;
@@ -185,12 +184,12 @@ public abstract class WidgetScreen extends Screen {
     public boolean keyReleased(@NonNull KeyEvent input) {
         if (locked) return false;
 
-        if ((input.modifiers() == MOD_CONTROL || input.modifiers() == MOD_SUPER) && input.key() == KEY_9) {
+        if ((input.hasControlDown() || (input.modifiers() & MOD_SUPER) != 0) && (input.key() == KEY_9 || input.shortcutKey() == 57)) {
             debug = !debug;
             return true;
         }
 
-        if ((input.key() == KEY_RETURN || input.key() == KEY_NUMPADENTER) && enterAction != null) {
+        if ((input.isConfirmation() || input.key() == KEY_RETURN || input.key() == KEY_NUMPADENTER) && enterAction != null) {
             enterAction.run();
             return true;
         }
@@ -206,7 +205,7 @@ public abstract class WidgetScreen extends Screen {
         if (shouldReturn) return true;
 
         // Select next text box if TAB was pressed
-        if (input.key() == KEY_TAB) {
+        if (input.isCycleFocus() || input.key() == KEY_TAB) {
             AtomicReference<WTextBox> firstTextBox = new AtomicReference<>(null);
             AtomicBoolean done = new AtomicBoolean(false);
             AtomicBoolean foundFocused = new AtomicBoolean(false);
@@ -237,10 +236,10 @@ public abstract class WidgetScreen extends Screen {
             return true;
         }
 
-        boolean control = MacosUtil.IS_MACOS ? input.modifiers() == MOD_SUPER : input.modifiers() == MOD_CONTROL;
+        boolean control = input.hasControlDownWithQuirk() && !input.hasShiftDown() && !input.hasAltDown();
 
-        return (control && input.key() == KEY_C && toClipboard())
-            || (control && input.key() == KEY_V && fromClipboard());
+        return ((input.isCopy() || (control && input.key() == KEY_C)) && toClipboard())
+            || ((input.isPaste() || (control && input.key() == KEY_V)) && fromClipboard());
     }
 
     public void keyRepeated(KeyEvent input) {

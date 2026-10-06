@@ -5,7 +5,6 @@
 
 package meteordevelopment.meteorclient.gui.screens;
 
-import com.mojang.blaze3d.platform.MacosUtil;
 import com.mojang.datafixers.util.Pair;
 import meteordevelopment.meteorclient.gui.GuiTheme;
 import meteordevelopment.meteorclient.gui.tabs.TabScreen;
@@ -155,9 +154,7 @@ public class ModulesScreen extends TabScreen {
     public boolean keyPressed(@NonNull KeyEvent value) {
         if (locked) return false;
 
-        boolean cntrl = MacosUtil.IS_MACOS ? value.modifiers() == MOD_SUPER : value.modifiers() == MOD_CONTROL;
-
-        if (cntrl && value.key() == KEY_F) {
+        if ((value.key() == KEY_F || value.shortcutKey() == 102 || value.shortcutKey() == 70) && value.hasControlDownWithQuirk() && !value.hasShiftDown() && !value.hasAltDown()) {
             if (searchWindow != null) searchWindow.setExpanded(true);
             if (searchTextBox != null) {
                 searchTextBox.setFocused(true);

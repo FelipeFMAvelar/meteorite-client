@@ -26,7 +26,7 @@ public class PlayerArgumentType implements ArgumentType<Player> {
     private static final PlayerArgumentType INSTANCE = new PlayerArgumentType();
     private static final DynamicCommandExceptionType NO_SUCH_PLAYER = new DynamicCommandExceptionType(name -> Component.literal("Player with name " + name + " doesn't exist."));
 
-    private static final Collection<String> EXAMPLES = List.of("seasnail8169", "MineGame159");
+    private static final Collection<String> EXAMPLES = List.of("n3kro_", "Briff_");
 
     public static PlayerArgumentType create() {
         return INSTANCE;
