@@ -476,6 +476,7 @@ public class Modules extends System<Modules> {
         add(new Anchor());
         add(new AntiVoid());
         add(new AutoJump());
+        add(new AutoMlg());
         add(new AutoWalk());
         add(new AutoWasp());
         add(new Blink());
